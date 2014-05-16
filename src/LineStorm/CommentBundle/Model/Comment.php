@@ -29,9 +29,9 @@ abstract class Comment implements CommentInterface
     protected $author;
 
     /**
-     * @var UserInterface
+     * @var \DateTime
      */
-    protected $createdBy;
+    protected $createdOn;
 
     /**
      * @var \DateTime
@@ -128,6 +128,70 @@ abstract class Comment implements CommentInterface
     public function getParent()
     {
         return $this->parent;
+    }
+
+    /**
+     * @param \DateTime $createdOn
+     */
+    public function setCreatedOn(\DateTime $createdOn)
+    {
+        $this->createdOn = $createdOn;
+    }
+
+    /**
+     * @return \DateTime
+     */
+    public function getCreatedOn()
+    {
+        return $this->createdOn;
+    }
+
+    /**
+     * @param boolean $deleted
+     */
+    public function setDeleted($deleted)
+    {
+        $this->deleted = $deleted;
+    }
+
+    /**
+     * @return boolean
+     */
+    public function getDeleted()
+    {
+        return $this->deleted;
+    }
+
+    /**
+     * @param UserInterface $editedBy
+     */
+    public function setEditedBy(UserInterface $editedBy)
+    {
+        $this->editedBy = $editedBy;
+    }
+
+    /**
+     * @return UserInterface
+     */
+    public function getEditedBy()
+    {
+        return $this->editedBy;
+    }
+
+    /**
+     * @param \DateTime $editiedOn
+     */
+    public function setEditiedOn(\DateTime $editiedOn)
+    {
+        $this->editiedOn = $editiedOn;
+    }
+
+    /**
+     * @return \DateTime
+     */
+    public function getEditiedOn()
+    {
+        return $this->editiedOn;
     }
 
 

@@ -7,3 +7,9 @@ services:
     class: %linestorm.cms.module.comment.class%
     tags:
       - { name: linestorm.cms.module }
+
+  linestorm.cms.module.comment.form.comment:
+        class: LineStorm\CommentBundle\Form\CommentFormType
+        arguments: [@linestorm.cms.model_manager, @linestorm.cms.module_manager]
+        tags:
+            - { name: form.type, alias: linestorm_cms_form_comment }
