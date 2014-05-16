@@ -1,0 +1,9 @@
+parameters:
+  linestorm.cms.module.comment.class:   LineStorm\CommentBundle\Module\CommentModule
+
+services: 
+
+  linestorm.cms.module.comment:
+    class: %linestorm.cms.module.comment.class%
+    tags:
+      - { name: linestorm.cms.module }
