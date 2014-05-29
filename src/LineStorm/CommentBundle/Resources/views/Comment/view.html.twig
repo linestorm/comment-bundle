@@ -1,6 +1,25 @@
-<div class="media">
+<div class="media comment-row">
     <div class="media-body">
-        <h4 class="media-heading">{{ comment.author.username }}</h4>
-        {{ comment.body }}
+        <div class="media-heading text-muted">
+            <div class="pull-left comment-details">
+                <span><i class="fa-user"></i> {% if comment.author %}{{ comment.author.username }}{% else %}{{ comment.name }}{% endif %}</span>
+                <span><i class="fa-clock-o"></i> {{ comment.createdOn|date('d/m/Y H:i') }}</span>
+            </div>
+
+            <div class="pull-right comment-buttons">
+                <button class="btn btn-link">
+                    <i class="fa-reply"></i> Reply
+                </button>
+                {% if app.user and app.user.hasGroup('admin') %}
+                    <button class="btn btn-danger comment-delete" data-url="{{ url('linestorm_cms_module_comment_api_delete_provider_thread_comment', {provider: provider, thread: comment.thread.id, id: comment.id}) }}">
+                        <i class="fa-trash-o"></i> Delete
+                    </button>
+                {% endif %}
+            </div>
+            <div class="clearfix"></div>
+        </div>
+        <p>
+            {{ comment.body }}
+        </p>
     </div>
 </div>

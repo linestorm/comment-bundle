@@ -1,7 +1,7 @@
 Comment Module for LineStormCMS
 ===============================
 
-Comment Module for LineStormCME.
+Comment Module for LineStormCMS.
 
 Installation
 ============

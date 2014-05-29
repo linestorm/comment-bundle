@@ -3,12 +3,11 @@
 namespace LineStorm\CommentBundle\Controller\Api;
 
 use Doctrine\ORM\Query;
-use FOS\RestBundle\Routing\ClassResourceInterface;
 use FOS\RestBundle\View\View;
 use LineStorm\CmsBundle\Controller\Api\AbstractApiController;
 use LineStorm\CommentBundle\Model\Comment;
 use LineStorm\CommentBundle\Model\CommentInterface;
-use Symfony\Component\Form\Form;
+use LineStorm\CommentBundle\Model\ThreadInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
@@ -20,34 +19,26 @@ use Symfony\Component\Security\Core\User\UserInterface;
  * @package LineStorm\CommentBundle\Controller\Api
  * @author  Andy Thorne <contrabandvr@gmail.com>
  */
-class CommentController extends AbstractApiController implements ClassResourceInterface
+class CommentController extends AbstractApiController
 {
     /**
-     * Creates a Posy type form
+     * Get a comment for a thread
      *
-     * @param null|CommentInterface $entity
-     * @param array                 $options
-     *
-     * @return Form
-     */
-    private function getForm($entity = null, array $options = array())
-    {
-        return $this->createForm('linestorm_cms_form_comment', $entity, $options);
-    }
-
-    /**
-     * Get a comment
-     *
-     * @param $id
+     * @param string $provider
+     * @param int    $thread
+     * @param int    $id
      *
      * @throws NotFoundHttpException
+     *
      * @return Response
      */
-    public function getAction($id)
+    public function getCommentAction($provider, $thread, $id)
     {
-        // get the providers
-        $modelManager = $this->get('linestorm.cms.model_manager');
-        $comment      = $modelManager->get('comment')->find($id);
+        $commentModule = $this->get('linestorm.cms.module.comment.manager');
+        $commentClass  = $commentModule->getCommentClass($provider);
+        $em            = $this->getDoctrine()->getManager();
+
+        $comment = $em->getRepository($commentClass)->find($id);
 
         if(!($comment instanceof CommentInterface))
         {
@@ -58,7 +49,8 @@ class CommentController extends AbstractApiController implements ClassResourceIn
         {
             case 'html':
                 return $this->render('LineStormCommentBundle:Comment:view.html.twig', array(
-                    'comment' => $comment,
+                    'provider' => $provider,
+                    'comment'  => $comment,
                 ));
                 break;
 
@@ -66,17 +58,29 @@ class CommentController extends AbstractApiController implements ClassResourceIn
             default:
                 $view = View::create($comment);
                 $view->setFormat('json');
+
                 return $this->get('fos_rest.view_handler')->handle($view);
                 break;
         }
     }
 
-    public function getThreadAction($name, $thread)
+    /**
+     * Get all comments in a thread
+     *
+     * @param string $provider
+     * @param int    $thread
+     *
+     * @return Response
+     */
+    public function getCommentsAction($provider, $thread)
     {
 
         $commentModule = $this->get('linestorm.cms.module.comment.manager');
-        $commentClass  = $commentModule->getCommentClass($name);
+        $commentClass  = $commentModule->getCommentClass($provider);
+        $threadClass   = $commentModule->getThreadClass($provider);
         $em            = $this->getDoctrine()->getManager();
+
+        $threadEntity = $em->getRepository($threadClass)->find($thread);
 
         $dql = "
             SELECT
@@ -84,8 +88,8 @@ class CommentController extends AbstractApiController implements ClassResourceIn
               partial a.{id, username}
             FROM
               {$commentClass} c
-              JOIN c.author a
               JOIN c.thread t
+              LEFT JOIN c.author a
             WHERE
               t.id = ?1
               AND c.deleted = 0
@@ -95,95 +99,102 @@ class CommentController extends AbstractApiController implements ClassResourceIn
 
         $query = $em->createQuery($dql)->setParameter(1, $thread);
 
+
         switch($this->getRequest()->getRequestFormat())
         {
             case 'html':
                 $comments = $query->getResult();
-                return $this->render('LineStormCommentBundle:Comment:list.html.twig', array(
-                    'comments' => $comments,
-                ));
+                if($threadEntity->getCommentsEnabled())
+                {
+                    return $this->render('LineStormCommentBundle:Comment:list.html.twig', array(
+                        'provider' => $provider,
+                        'comments' => $comments,
+                    ));
+                }
+                else
+                {
+                    return $this->render('LineStormCommentBundle:Comment:disabled.html.twig');
+                }
+
                 break;
 
             case 'json':
             default:
                 $comments = $query->getArrayResult();
-                $view = View::create($comments);
+                $view     = View::create($comments);
                 $view->setFormat('json');
+
                 return $this->get('fos_rest.view_handler')->handle($view);
                 break;
         }
     }
 
-
-    /**
-     * Get all comments
-     *
-     * @return Response
-     */
-    public function cgetAction()
-    {
-        // get the providers
-        $modelManager = $this->get('linestorm.cms.model_manager');
-        $comments     = $modelManager->get('comment')->findAll();
-
-        $view = View::create($comments);
-
-        return $this->get('fos_rest.view_handler')->handle($view);
-    }
-
     /**
      * Create a new comment
      *
-     * @param $name
-     * @param $thread
+     * @param string $provider
+     * @param int    $thread
      *
      * @throws AccessDeniedException
      * @return Response
      */
-    public function postThreadAction($name, $thread)
+    public function postCommentAction($provider, $thread)
     {
 
+        $commentModule = $this->get('linestorm.cms.module.comment.manager');
+        $commentClass  = $commentModule->getCommentClass($provider);
+        $threadClass   = $commentModule->getThreadClass($provider);
+        $em            = $this->getDoctrine()->getManager();
+
+        /** @var ThreadInterface $threadEntity */
+        $threadEntity = $em->getRepository($threadClass)->find($thread);
+
         $user = $this->getUser();
-        if(!($user instanceof UserInterface) || !($user->hasGroup('admin')))
+
+        if(!$threadEntity->getCommentsEnabled() || !$threadEntity->getCommentsAnonymous() && !$user)
         {
             throw new AccessDeniedException();
         }
 
-        $modelManager = $this->getModelManager();
-
-        $request = $this->getRequest();
-        $form    = $this->getForm();
+        $formType = $this->getCommentForm($threadEntity);
+        $request  = $this->getRequest();
+        $form     = $this->createForm($formType);
 
         $formValues = json_decode($request->getContent(), true);
 
-        $form->submit($formValues['linestorm_cms_form_comment']);
+        $form->submit($formValues[$formType]);
 
         if($form->isValid())
         {
-
-            $em  = $modelManager->getManager();
             $now = new \DateTime();
 
-            $commentModule = $this->get('linestorm.cms.module.comment.manager');
-            $commentClass  = $commentModule->getCommentClass($name);
-            $threadClass   = $commentModule->getThreadClass($name);
-            $threadEntity  = $em->getRepository($threadClass)->find($thread);
+            $threadEntity = $em->getRepository($threadClass)->find($thread);
 
             /** @var Comment $comment */
             $data    = $form->getData();
             $comment = new $commentClass();
             $comment->setBody($data['body']);
             $comment->setThread($threadEntity);
-            $comment->setAuthor($user);
             $comment->setCreatedOn($now);
+
+            if(array_key_exists('name', $data))
+                $comment->setName($data['name']);
+
+            if($user)
+                $comment->setAuthor($user);
+
 
             $em->persist($comment);
             $em->flush();
 
-            $tpl = $this->get('templating');
+            $tpl          = $this->get('templating');
             $locationPage = array(
                 'html'     => $tpl->render('LineStormCommentBundle:Comment:view.html.twig', array('comment' => $comment)),
-                'location' => $this->generateUrl('linestorm_cms_module_comment_api_get_comment', array('id' => $comment->getId()))
+                'location' => $this->generateUrl('linestorm_cms_module_comment_api_get_provider_thread_comment', array(
+                        'provider' => $provider,
+                        'thread'   => $thread,
+                        'id'       => $comment->getId()
+                    ))
             );
             $view         = View::create($locationPage, 201);
         }
@@ -198,13 +209,15 @@ class CommentController extends AbstractApiController implements ClassResourceIn
     /**
      * Update a comment
      *
-     * @param $id
+     * @param string $provider
+     * @param int    $thread
+     * @param int    $id
      *
      * @return Response
      * @throws AccessDeniedException
      * @throws NotFoundHttpException
      */
-    public function putAction($id)
+    public function putCommentAction($provider, $thread, $id)
     {
 
         $user = $this->getUser();
@@ -213,9 +226,11 @@ class CommentController extends AbstractApiController implements ClassResourceIn
             throw new AccessDeniedException();
         }
 
-        $modelManager = $this->getModelManager();
+        $commentModule = $this->get('linestorm.cms.module.comment.manager');
+        $commentClass  = $commentModule->getCommentClass($provider);
+        $em            = $this->getDoctrine()->getManager();
 
-        $comment = $modelManager->get('comment')->find($id);
+        $comment = $em->getRepository($commentClass)->find($id);
         if(!($comment instanceof Comment))
         {
             throw $this->createNotFoundException("Comment not found");
@@ -230,7 +245,6 @@ class CommentController extends AbstractApiController implements ClassResourceIn
 
         if($form->isValid())
         {
-            $em  = $modelManager->getManager();
             $now = new \DateTime();
 
             /** @var Comment $updatedComment */
@@ -246,7 +260,11 @@ class CommentController extends AbstractApiController implements ClassResourceIn
             $commentSearchProvider = $searchManager->get('comment');
             $commentSearchProvider->index($updatedComment);
 
-            $view = $this->createResponse(array('location' => $this->generateUrl('linestorm_cms_module_comment_api_get_comment', array('id' => $form->getData()->getId()))), 200);
+            $view = $this->createResponse(array('location' => $this->generateUrl('linestorm_cms_module_comment_api_get_provider_thread_comment', array(
+                    'provider' => $provider,
+                    'thread'   => $thread,
+                    'id'       => $form->getData()->getId()
+                ))), 200);
         }
         else
         {
@@ -259,13 +277,15 @@ class CommentController extends AbstractApiController implements ClassResourceIn
     /**
      * Delete a comment
      *
-     * @param $id
+     * @param string $provider
+     * @param int    $thread
+     * @param int    $id
      *
      * @return Response
      * @throws AccessDeniedException
      * @throws NotFoundHttpException
      */
-    public function deleteAction($id)
+    public function deleteCommentAction($provider, $thread, $id)
     {
 
         $user = $this->getUser();
@@ -274,27 +294,25 @@ class CommentController extends AbstractApiController implements ClassResourceIn
             throw new AccessDeniedException();
         }
 
-        $modelManager = $this->getModelManager();
+        $commentModule = $this->get('linestorm.cms.module.comment.manager');
+        $commentClass  = $commentModule->getCommentClass($provider);
+        $em            = $this->getDoctrine()->getManager();
 
-        $comment = $modelManager->get('comment')->find($id);
+        $comment = $em->getRepository($commentClass)->find($id);
         if(!($comment instanceof Comment))
         {
             throw $this->createNotFoundException("Comment not found");
         }
-
-        $em = $modelManager->getManager();
-
-        // remove indexes
-        $searchManager         = $this->get('linestorm.cms.module.search_manager');
-        $commentSearchProvider = $searchManager->get('comment');
-        $commentSearchProvider->remove($comment);
 
         $em->remove($comment);
         $em->flush();
 
         $view = View::create(array(
             'message'  => 'Comment has been deleted',
-            'location' => $this->generateUrl('linestorm_cms_module_comment_api_get_comments'),
+            'location' => $this->generateUrl('linestorm_cms_module_comment_api_get_provider_thread_comments', array(
+                    'provider' => $provider,
+                    'thread'   => $thread,
+                )),
         ));
 
         return $this->get('fos_rest.view_handler')->handle($view);
@@ -304,43 +322,44 @@ class CommentController extends AbstractApiController implements ClassResourceIn
     /**
      * Get a new comment form
      *
-     * @param $name
-     * @param $thread
+     * @param string $provider
+     * @param int    $thread
      *
      * @throws AccessDeniedException
      * @return Response
      */
-    public function newThreadAction($name, $thread)
+    public function newCommentAction($provider, $thread)
     {
-        $user = $this->getUser();
-        if(!($user instanceof UserInterface) || !($user->hasGroup('admin')))
-        {
-            throw new AccessDeniedException();
-        }
-
         $commentModule = $this->get('linestorm.cms.module.comment.manager');
+        $commentClass  = $commentModule->getCommentClass($provider);
+        $threadClass   = $commentModule->getThreadClass($provider);
+        $em            = $this->getDoctrine()->getManager();
 
-        $commentClass = $commentModule->getCommentClass($name);
-        $threadClass  = $commentModule->getThreadClass($name);
-
-        $em           = $this->getDoctrine()->getManager();
+        /** @var ThreadInterface $threadEntity */
         $threadEntity = $em->getRepository($threadClass)->find($thread);
 
-        $comment = new $commentClass();
-        $form    = $this->getForm($comment, array(
-            'action' => $this->generateUrl('linestorm_cms_module_comment_api_post_comment_thread', array(
-                    'name'   => $name,
-                    'thread' => $threadEntity->getId(),
-                )),
-            'method' => 'POST',
-        ));
+        $form = '';
 
-        $view = $form->createView();
+        if($threadEntity->getCommentsEnabled())
+        {
+            $formType = $this->getCommentForm($threadEntity);
 
-        $tpl  = $this->get('templating');
-        $form = $tpl->render('LineStormCommentBundle:Comment:form.html.twig', array(
-            'form' => $view
-        ));
+            $comment = new $commentClass();
+            $form    = $this->createForm($formType, $comment, array(
+                'action' => $this->generateUrl('linestorm_cms_module_comment_api_post_provider_thread_comment', array(
+                        'provider' => $provider,
+                        'thread'   => $threadEntity->getId(),
+                    )),
+                'method' => 'POST',
+            ));
+
+            $view = $form->createView();
+
+            $tpl  = $this->get('templating');
+            $form = $tpl->render('LineStormCommentBundle:Comment:form.html.twig', array(
+                'form' => $view
+            ));
+        }
 
         $rView = View::create(array(
             'form' => $form
@@ -351,12 +370,16 @@ class CommentController extends AbstractApiController implements ClassResourceIn
     }
 
     /**
-     * @param $id
+     * Get an edit form
+     *
+     * @param string $provider
+     * @param int    $thread
+     * @param int    $id
      *
      * @throws AccessDeniedException
      * @return Response
      */
-    public function editAction($id)
+    public function editCommentAction($provider, $thread, $id)
     {
         $user = $this->getUser();
         if(!($user instanceof UserInterface) || !($user->hasGroup('admin')))
@@ -364,10 +387,17 @@ class CommentController extends AbstractApiController implements ClassResourceIn
             throw new AccessDeniedException();
         }
 
-        $modelManager = $this->getModelManager();
-        $comment      = $modelManager->find($id);
-        $form         = $this->getForm($comment, array(
-            'action' => $this->generateUrl('linestorm_cms_module_comment_api_put_comment'),
+        $commentModule = $this->get('linestorm.cms.module.comment.manager');
+        $commentClass  = $commentModule->getCommentClass($provider);
+        $em            = $this->getDoctrine()->getManager();
+
+        $comment = $em->getRepository($commentClass)->find($id);
+        $form    = $this->getForm($comment, array(
+            'action' => $this->generateUrl('linestorm_cms_module_comment_api_put_provider_thread_comment', array(
+                    'provider' => $provider,
+                    'thread'   => $thread,
+                    'id'       => $comment->getId(),
+                )),
             'method' => 'PUT',
         ));
 
@@ -383,6 +413,25 @@ class CommentController extends AbstractApiController implements ClassResourceIn
 
         return $this->get('fos_rest.view_handler')->handle($rView);
 
+    }
+
+    /**
+     * Get the comment form type
+     *
+     * @param ThreadInterface $thread
+     *
+     * @return string
+     */
+    private function getCommentForm(ThreadInterface $thread)
+    {
+        if($thread->getCommentsAnonymous() && !$this->getUser())
+        {
+            return 'linestorm_cms_form_comment_anonymous';
+        }
+        else
+        {
+            return 'linestorm_cms_form_comment';
+        }
     }
 
 }

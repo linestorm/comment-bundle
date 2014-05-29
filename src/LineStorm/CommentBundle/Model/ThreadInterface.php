@@ -11,4 +11,24 @@ namespace LineStorm\CommentBundle\Model;
 interface ThreadInterface
 {
 
+    /**
+     * @param boolean $commentsAnonymous
+     */
+    public function setCommentsAnonymous($commentsAnonymous);
+
+    /**
+     * @return boolean
+     */
+    public function getCommentsAnonymous();
+
+    /**
+     * @param boolean $commentsEnabled
+     */
+    public function setCommentsEnabled($commentsEnabled);
+
+    /**
+     * @return boolean
+     */
+    public function getCommentsEnabled();
+
 } 

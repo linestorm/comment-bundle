@@ -22,6 +22,11 @@ abstract class Comment implements CommentInterface
     /**
      * @var string
      */
+    protected $name;
+
+    /**
+     * @var string
+     */
     protected $body;
 
     /**
@@ -81,13 +86,28 @@ abstract class Comment implements CommentInterface
         $this->createdOn = new \DateTime();
     }
 
-
     /**
      * @return int
      */
     public function getId()
     {
         return $this->id;
+    }
+
+    /**
+     * @param string $name
+     */
+    public function setName($name)
+    {
+        $this->name = $name;
+    }
+
+    /**
+     * @return string
+     */
+    public function getName()
+    {
+        return $this->name;
     }
 
     /**

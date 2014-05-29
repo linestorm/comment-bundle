@@ -6,6 +6,7 @@
     <mapped-superclass name="LineStorm\CommentBundle\Model\Comment" table="comment">
 
         <field name="body" type="string" column="body" nullable="false" />
+        <field name="name" type="string" column="name" nullable="true" />
 
         <field name="createdOn"  type="datetime" column="created_on" nullable="false" />
         <field name="editedOn"  type="datetime" column="edited_on"   nullable="true" />

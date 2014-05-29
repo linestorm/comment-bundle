@@ -8,39 +8,72 @@ define(['jquery', 'cms_api'], function ($, api) {
         $commentBlock = $('.comment-block');
 
         // get the new comment form
-        window.lineStorm.api.call($commentBlock.data('url-new'), {
-            dataType: 'json',
-            success: function(ob){
-                if(ob.form){
-                    $newForm = $(ob.form);
-                    $commentBlock.find('.comment-block-new').html($newForm);
+        var loadCommentForm = function(){
+            window.lineStorm.api.call($commentBlock.data('url-new'), {
+                dataType: 'json',
+                success: function(ob){
+                    if(ob.form){
+                        $newForm = $(ob.form);
+                        $commentBlock.find('.comment-block-new').html($newForm);
 
-                    $newForm.on('submit', function(e){
-                        e.preventDefault();
-                        e.stopPropagation();
+                        $newForm.on('submit', function(e){
+                            e.preventDefault();
+                            e.stopPropagation();
 
-                        window.lineStorm.api.saveForm($newForm, function(ob, status, xhr){
-                            if(xhr.status === 200){
-                            } else if(xhr.status === 201) {
-                                $commentBlock.find('.comment-block-comments').append(ob.html);
-                            } else {
-                            }
+                            window.lineStorm.api.saveForm($newForm, function(ob, status, xhr){
+                                if(xhr.status === 200){
+                                } else if(xhr.status === 201) {
+                                    $commentBlock.find('.comment-block-comments').append(ob.html);
+                                } else {
+                                }
+                            });
+
+                            return false;
                         });
-
-                        return false;
-                    });
+                    }
                 }
+            });
+        };
+
+
+        var loadComments = function(){
+            // load current comments
+            window.lineStorm.api.call($commentBlock.data('url-get'), {
+                dataType: 'html',
+                success: function(html){
+                    $commentBlock.find('.comment-block-comments').html(html);
+                    $commentBlock.find('.comment-block-new').find('textarea,input').val('');
+                }
+            });
+            return false;
+        };
+
+        // init load comments
+        loadCommentForm();
+        loadComments();
+
+        // bind comment refresh
+        $('.comments-refresh').on('click', loadComments)
+        $('.comments-refresh-form').on('click', loadCommentForm);
+
+        // comment delete button
+        $commentBlock.on('click', '.comment-delete', function(){
+            if(confirm("Are you sure you want to delete this comment?")){
+                var $this = $(this);
+                window.lineStorm.api.call($this.data('url'), {
+                    method: 'DELETE',
+                    dataType: 'html',
+                    success: function(html){
+                        $this.closest('.comment-row').slideUp(1000, function(){
+                            $(this).remove();
+                        });
+                    }
+                });
+
             }
+            return false;
         });
 
-        // load current comments
-        window.lineStorm.api.call($commentBlock.data('url-get'), {
-            dataType: 'html',
-            success: function(html){
-                $commentBlock.find('.comment-block-comments').html(html);
-                $commentBlock.find('.comment-block-new').find('textarea,input').val('');
-            }
-        });
 
         $('.comment-block form').on('submit', function(e){
             e.preventDefault();

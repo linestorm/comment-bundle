@@ -4,14 +4,22 @@
     })
 }}
 
-<div class="comment-block" data-url-get="{{ url('linestorm_cms_module_comment_api_get_comment_thread', {name: comment_config, thread: id, _format: 'html'}) }}" data-url-new="{{ url('linestorm_cms_module_comment_api_new_comment_thread', {name: comment_config, thread: id}) }}">
+<div class="comment-block"
+     data-url-get="{{ url('linestorm_cms_module_comment_api_get_provider_thread_comments', {provider: comment_config, thread: id, _format: 'html'}) }}"
+     data-url-new="{{ url('linestorm_cms_module_comment_api_new_provider_thread_comment', {provider: comment_config, thread: id}) }}">
 
+    <button class="btn btn-link comments-refresh-form">
+        <i class="fa-refresh"></i> Refresh Form
+    </button>
     <div class="comment-block-new">
 
     </div>
 
     <hr />
 
+    <button class="btn btn-link comments-refresh">
+        <i class="fa-refresh"></i> Refresh Comments
+    </button>
     <div class="comment-block-comments">
 
     </div>
