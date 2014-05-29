@@ -84,7 +84,7 @@ class CommentController extends AbstractApiController
 
         $dql = "
             SELECT
-              partial c.{id,body,createdOn,editedOn},
+              partial c.{id,body,createdOn,editedOn,name},
               partial a.{id, username}
             FROM
               {$commentClass} c
@@ -176,6 +176,8 @@ class CommentController extends AbstractApiController
             $comment->setBody($data['body']);
             $comment->setThread($threadEntity);
             $comment->setCreatedOn($now);
+            $comment->setIp($request->getClientIp());
+            $comment->setAgent($request->headers->get('User-Agent'));
 
             if(array_key_exists('name', $data))
                 $comment->setName($data['name']);
@@ -189,11 +191,15 @@ class CommentController extends AbstractApiController
 
             $tpl          = $this->get('templating');
             $locationPage = array(
-                'html'     => $tpl->render('LineStormCommentBundle:Comment:view.html.twig', array('comment' => $comment)),
+                'html'     => $tpl->render('LineStormCommentBundle:Comment:view.html.twig', array(
+                        'provider' => $provider,
+                        'comment'  => $comment,
+                        'thread'   => $thread,
+                    )),
                 'location' => $this->generateUrl('linestorm_cms_module_comment_api_get_provider_thread_comment', array(
                         'provider' => $provider,
                         'thread'   => $thread,
-                        'id'       => $comment->getId()
+                        'id'       => $comment->getId(),
                     ))
             );
             $view         = View::create($locationPage, 201);

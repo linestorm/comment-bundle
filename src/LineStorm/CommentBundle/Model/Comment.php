@@ -74,6 +74,10 @@ abstract class Comment implements CommentInterface
      */
     protected $parent;
 
+    protected $ip;
+
+    protected $agent;
+
     /**
      * @var Comment[]
      */
@@ -292,6 +296,38 @@ abstract class Comment implements CommentInterface
     public function getDeletedOn()
     {
         return $this->deletedOn;
+    }
+
+    /**
+     * @param mixed $agent
+     */
+    public function setAgent($agent)
+    {
+        $this->agent = $agent;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getAgent()
+    {
+        return $this->agent;
+    }
+
+    /**
+     * @param mixed $ip
+     */
+    public function setIp($ip)
+    {
+        $this->ip = $ip;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getIp()
+    {
+        return $this->ip;
     }
 
 

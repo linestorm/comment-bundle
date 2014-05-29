@@ -2,6 +2,7 @@
 
 namespace LineStorm\CommentBundle\Comment;
 use LineStorm\CommentBundle\Comment\Exception\CommentConfigNotFoundException;
+use LineStorm\CommentBundle\Comment\Form\FormExtensionInterface;
 
 /**
  * Class CommentManager
@@ -18,11 +19,34 @@ class CommentManager
     protected $config;
 
     /**
+     * @var FormExtensionInterface[]
+     */
+    protected $formExtensions = array();
+
+    /**
      * @param array $config
      */
     public function __construct(array $config)
     {
         $this->config = $config;
+    }
+
+    /**
+     * Add a form extension
+     *
+     * @param FormExtensionInterface $formExtension
+     */
+    public function addFormExtension(FormExtensionInterface $formExtension)
+    {
+        $this->formExtensions[] = $formExtension;
+    }
+
+    /**
+     * @return FormExtensionInterface[]
+     */
+    public function getFormExtensions()
+    {
+        return $this->formExtensions;
     }
 
     /**

@@ -8,6 +8,9 @@
         <field name="body" type="string" column="body" nullable="false" />
         <field name="name" type="string" column="name" nullable="true" />
 
+        <field name="ip" type="string" length="15" column="ip_address" nullable="false" />
+        <field name="agent" type="string" length="150" column="user_agent" nullable="false" />
+
         <field name="createdOn"  type="datetime" column="created_on" nullable="false" />
         <field name="editedOn"  type="datetime" column="edited_on"   nullable="true" />
         <field name="deletedOn"  type="datetime" column="deleted_on" nullable="true" />

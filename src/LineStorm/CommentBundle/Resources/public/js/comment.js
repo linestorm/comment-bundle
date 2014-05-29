@@ -24,6 +24,8 @@ define(['jquery', 'cms_api'], function ($, api) {
                                 if(xhr.status === 200){
                                 } else if(xhr.status === 201) {
                                     $commentBlock.find('.comment-block-comments').append(ob.html);
+                                    $commentBlock.find('.comment-block-new').empty();
+                                    loadCommentForm();
                                 } else {
                                 }
                             });
@@ -53,8 +55,39 @@ define(['jquery', 'cms_api'], function ($, api) {
         loadComments();
 
         // bind comment refresh
-        $('.comments-refresh').on('click', loadComments)
+        $('.comments-refresh').on('click', loadComments);
         $('.comments-refresh-form').on('click', loadCommentForm);
+
+        $commentBlock.on('click', '.comment-reply', function(){
+            var parentId = $(this).data('id');
+            var $comment = $(this).closest('.comment-row');
+            window.lineStorm.api.call($commentBlock.data('url-new'), {
+                dataType: 'json',
+                success: function(ob){
+                    if(ob.form){
+                        $newForm = $(ob.form);
+                        $comment.after($newForm);
+
+                        $newForm.on('submit', function(e){
+                            e.preventDefault();
+                            e.stopPropagation();
+
+                            window.lineStorm.api.saveForm($newForm, function(ob, status, xhr){
+                                if(xhr.status === 200){
+                                } else if(xhr.status === 201) {
+                                    $commentBlock.find('.comment-block-comments').append(ob.html);
+                                    $commentBlock.find('.comment-block-new').empty();
+                                    loadCommentForm();
+                                } else {
+                                }
+                            });
+
+                            return false;
+                        });
+                    }
+                }
+            });
+        });
 
         // comment delete button
         $commentBlock.on('click', '.comment-delete', function(){

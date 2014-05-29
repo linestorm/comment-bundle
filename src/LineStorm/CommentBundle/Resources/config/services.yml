@@ -1,6 +1,7 @@
 parameters:
   linestorm.cms.module.comment.class:         LineStorm\CommentBundle\Module\CommentModule
   linestorm.cms.module.comment.manager.class: LineStorm\CommentBundle\Comment\CommentManager
+  linestorm.cms.module.comment.form_extension.captcha.class: LineStorm\CommentBundle\Comment\Form\CaptchaFormExtension
 
 services: 
 
@@ -10,19 +11,24 @@ services:
       - { name: linestorm.cms.module }
 
   linestorm.cms.module.comment.form.comment:
-        class: LineStorm\CommentBundle\Form\CommentFormType
-        arguments: [@linestorm.cms.model_manager, @linestorm.cms.module_manager]
-        tags:
-            - { name: form.type, alias: linestorm_cms_form_comment }
+    class: LineStorm\CommentBundle\Form\CommentFormType
+    arguments: [@linestorm.cms.module.comment.manager]
+    tags:
+      - { name: form.type, alias: linestorm_cms_form_comment }
 
   linestorm.cms.module.comment.form.comment_anonymous:
-        class: LineStorm\CommentBundle\Form\AnonymousCommentFormType
-        arguments: [@linestorm.cms.model_manager, @linestorm.cms.module_manager]
-        tags:
-            - { name: form.type, alias: linestorm_cms_form_comment_anonymous }
+    class: LineStorm\CommentBundle\Form\AnonymousCommentFormType
+    arguments: [@linestorm.cms.module.comment.manager]
+    tags:
+      - { name: form.type, alias: linestorm_cms_form_comment_anonymous }
 
 
   linestorm.cms.module.comment.manager:
     class: %linestorm.cms.module.comment.manager.class%
     arguments:
       - %linestorm.cms.module.comment.mappings%
+
+  linestorm.cms.module.comment.form_extension.captcha:
+    class: %linestorm.cms.module.comment.form_extension.captcha.class%
+    tags:
+      - { name: linestorm.comment.form_extension }

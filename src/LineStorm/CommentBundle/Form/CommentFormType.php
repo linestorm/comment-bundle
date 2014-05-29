@@ -2,10 +2,7 @@
 
 namespace LineStorm\CommentBundle\Form;
 
-use LineStorm\CommentBundle\Comment\CommentManager;
-use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
-use Symfony\Component\OptionsResolver\OptionsResolverInterface;
 
 /**
  * Class CommentFormType
@@ -13,8 +10,10 @@ use Symfony\Component\OptionsResolver\OptionsResolverInterface;
  * @package LineStorm\CommentBundle\Form
  * @author  Andy Thorne <contrabandvr@gmail.com>
  */
-class CommentFormType extends AbstractType
+class CommentFormType extends AbstractCommentForm
 {
+
+
     /**
      * @param FormBuilderInterface $builder
      * @param array                $options
@@ -26,9 +25,15 @@ class CommentFormType extends AbstractType
                 'required' => true,
                 'label'    => false,
             ))
-            ->add('submit', 'submit')
         ;
 
+        $extensions = $this->commentManager->getFormExtensions();
+        foreach($extensions as $extension)
+        {
+            $extension->buildForm($builder, $options);
+        }
+
+        $builder->add('submit', 'submit');
     }
 
     /**
