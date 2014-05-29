@@ -1,5 +1,6 @@
 parameters:
-  linestorm.cms.module.comment.class:   LineStorm\CommentBundle\Module\CommentModule
+  linestorm.cms.module.comment.class:         LineStorm\CommentBundle\Module\CommentModule
+  linestorm.cms.module.comment.manager.class: LineStorm\CommentBundle\Comment\CommentManager
 
 services: 
 
@@ -13,3 +14,9 @@ services:
         arguments: [@linestorm.cms.model_manager, @linestorm.cms.module_manager]
         tags:
             - { name: form.type, alias: linestorm_cms_form_comment }
+
+
+  linestorm.cms.module.comment.manager:
+    class: %linestorm.cms.module.comment.manager.class%
+    arguments:
+      - %linestorm.cms.module.comment.mappings%

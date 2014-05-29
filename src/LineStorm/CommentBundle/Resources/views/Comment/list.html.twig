@@ -1,0 +1,3 @@
+{% for comment in comments %}
+    {{ include('LineStormCommentBundle:Comment:view.html.twig', {comment: comment}) }}
+{% endfor %}

@@ -1,0 +1,19 @@
+{{
+    include('LineStormCmsBundle::requirejs.html.twig', {
+        requirejs_module: ['app/main', 'cms_comment']
+    })
+}}
+
+<div class="comment-block" data-url-get="{{ url('linestorm_cms_module_comment_api_get_comment_thread', {name: comment_config, thread: id, _format: 'html'}) }}" data-url-new="{{ url('linestorm_cms_module_comment_api_new_comment_thread', {name: comment_config, thread: id}) }}">
+
+    <div class="comment-block-new">
+
+    </div>
+
+    <hr />
+
+    <div class="comment-block-comments">
+
+    </div>
+
+</div>

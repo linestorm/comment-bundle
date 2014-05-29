@@ -2,6 +2,7 @@
 
 namespace LineStorm\CommentBundle\Model;
 
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\UserInterface;
 
@@ -24,6 +25,11 @@ abstract class Comment implements CommentInterface
     protected $body;
 
     /**
+     * @var ThreadInterface
+     */
+    protected $thread;
+
+    /**
      * @var UserInterface
      */
     protected $author;
@@ -36,12 +42,22 @@ abstract class Comment implements CommentInterface
     /**
      * @var \DateTime
      */
-    protected $editiedOn;
+    protected $editedOn;
 
     /**
      * @var UserInterface
      */
     protected $editedBy;
+
+    /**
+     * @var UserInterface
+     */
+    protected $deletedBy;
+
+    /**
+     * @var \DateTime
+     */
+    protected $deletedOn;
 
     /**
      * @var boolean
@@ -54,9 +70,17 @@ abstract class Comment implements CommentInterface
     protected $parent;
 
     /**
-     * @var Comment
+     * @var Comment[]
      */
-    protected $child;
+    protected $children;
+
+    function __construct()
+    {
+        $this->children = new ArrayCollection();
+        $this->deleted = false;
+        $this->createdOn = new \DateTime();
+    }
+
 
     /**
      * @return int
@@ -99,19 +123,43 @@ abstract class Comment implements CommentInterface
     }
 
     /**
-     * @param Comment $child
+     * @param ThreadInterface $thread
      */
-    public function setChild(Comment $child)
+    public function setThread(ThreadInterface $thread)
     {
-        $this->child = $child;
+        $this->thread = $thread;
     }
 
     /**
-     * @return Comment|null
+     * @return ThreadInterface
      */
-    public function getChild()
+    public function getThread()
     {
-        return $this->child;
+        return $this->thread;
+    }
+
+    /**
+     * @param Comment $child
+     */
+    public function addChild(Comment $child)
+    {
+        $this->children[] = $child;
+    }
+
+    /**
+     * @param Comment $child
+     */
+    public function removeChild(Comment $child)
+    {
+        $this->children->removeElement($child);
+    }
+
+    /**
+     * @return Comment[]
+     */
+    public function getChildren()
+    {
+        return $this->children;
     }
 
     /**
@@ -179,21 +227,52 @@ abstract class Comment implements CommentInterface
     }
 
     /**
-     * @param \DateTime $editiedOn
+     * @param \DateTime $editedOn
      */
-    public function setEditiedOn(\DateTime $editiedOn)
+    public function setEditedOn(\DateTime $editedOn)
     {
-        $this->editiedOn = $editiedOn;
+        $this->editedOn = $editedOn;
     }
 
     /**
      * @return \DateTime
      */
-    public function getEditiedOn()
+    public function getEditedOn()
     {
-        return $this->editiedOn;
+        return $this->editedOn;
     }
 
+    /**
+     * @param UserInterface $deletedBy
+     */
+    public function setDeletedBy(UserInterface $deletedBy)
+    {
+        $this->deletedBy = $deletedBy;
+    }
+
+    /**
+     * @return UserInterface
+     */
+    public function getDeletedBy()
+    {
+        return $this->deletedBy;
+    }
+
+    /**
+     * @param \DateTime $deletedOn
+     */
+    public function setDeletedOn(\DateTime $deletedOn)
+    {
+        $this->deletedOn = $deletedOn;
+    }
+
+    /**
+     * @return \DateTime
+     */
+    public function getDeletedOn()
+    {
+        return $this->deletedOn;
+    }
 
 
 }

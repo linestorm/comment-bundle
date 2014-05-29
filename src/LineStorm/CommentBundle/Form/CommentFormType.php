@@ -2,35 +2,33 @@
 
 namespace LineStorm\CommentBundle\Form;
 
-use LineStorm\CmsBundle\Form\AbstractCmsFormType;
+use LineStorm\CommentBundle\Comment\CommentManager;
+use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolverInterface;
 
-class CommentFormType extends AbstractCmsFormType
+/**
+ * Class CommentFormType
+ *
+ * @package LineStorm\CommentBundle\Form
+ * @author  Andy Thorne <contrabandvr@gmail.com>
+ */
+class CommentFormType extends AbstractType
 {
-
     /**
      * @param FormBuilderInterface $builder
-     * @param array $options
+     * @param array                $options
      */
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
         $builder
-            ->add('body', 'text', array(
-                'required' => true
+            ->add('body', 'textarea', array(
+                'required' => true,
+                'label'    => false,
             ))
+            ->add('submit', 'submit')
         ;
 
-    }
-
-    /**
-     * @param OptionsResolverInterface $resolver
-     */
-    public function setDefaultOptions(OptionsResolverInterface $resolver)
-    {
-        $resolver->setDefaults(array(
-            'data_class' => $this->modelManager->getEntityClass('comment')
-        ));
     }
 
     /**
