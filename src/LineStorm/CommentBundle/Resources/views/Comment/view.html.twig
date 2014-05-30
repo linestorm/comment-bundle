@@ -1,4 +1,7 @@
 <div class="media comment-row">
+    <a class="pull-left" href="#">
+        <img class="media-object" data-src="holder.js/64x64" alt="64x64" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2NCIgaGVpZ2h0PSI2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiBmaWxsPSIjZWVlIi8+PHRleHQgdGV4dC1hbmNob3I9Im1pZGRsZSIgeD0iMzIiIHk9IjMyIiBzdHlsZT0iZmlsbDojYWFhO2ZvbnQtd2VpZ2h0OmJvbGQ7Zm9udC1zaXplOjEycHg7Zm9udC1mYW1pbHk6QXJpYWwsSGVsdmV0aWNhLHNhbnMtc2VyaWY7ZG9taW5hbnQtYmFzZWxpbmU6Y2VudHJhbCI+NjR4NjQ8L3RleHQ+PC9zdmc+" style="width: 64px; height: 64px;">
+    </a>
     <div class="media-body">
         <div class="media-heading text-muted">
             <div class="pull-left comment-details">
@@ -7,11 +10,13 @@
             </div>
 
             <div class="pull-right comment-buttons">
-                {% if app.user and app.user.hasGroup('admin') %}
-                    <button class="btn btn-link comment-reply" data-id="{{ comment.id }}">
+                {% if not comment.parent %}
+                    <button class="btn btn-link comment-reply" data-url="{{ url('linestorm_comment_api_new_provider_thread_comment_reply', {provider: provider, thread: comment.thread.id, id: comment.id} ) }}">
                         <i class="fa-reply"></i> Reply
                     </button>
-                    <button class="btn btn-danger comment-delete" data-url="{{ url('linestorm_cms_module_comment_api_delete_provider_thread_comment', {provider: provider, thread: comment.thread.id, id: comment.id}) }}">
+                {% endif %}
+                {% if app.user and app.user.hasGroup('admin') %}
+                    <button class="btn btn-danger comment-delete" data-url="{{ url('linestorm_comment_api_delete_provider_thread_comment', {provider: provider, thread: comment.thread.id, id: comment.id}) }}">
                         <i class="fa-trash-o"></i> Delete
                     </button>
                 {% endif %}
@@ -21,5 +26,11 @@
         <p>
             {{ comment.body }}
         </p>
+
+        {% if comment.children|length %}
+            {% for child_comment in comment.children %}
+                {{ include('LineStormCommentBundle:Comment:view.html.twig', {comment: child_comment}) }}
+            {% endfor %}
+        {% endif %}
     </div>
 </div>

@@ -1,17 +1,16 @@
-
-linestorm_cms_module_comment_api_provider_controller:
+linestorm_comment_api_provider_controller:
     type:         rest
-    resource:     LineStorm\CommentBundle\Controller\Api\ProviderController
-    name_prefix:  linestorm_cms_module_comment_api_
+    resource:     LineStorm\CommentBundle\Controller\ProviderController
+    name_prefix:  linestorm_comment_api_
 
-linestorm_cms_module_comment_api_threads_controller:
+linestorm_comment_api_threads_controller:
     type:         rest
-    parent:       linestorm_cms_module_comment_api_provider_controller
-    resource:     LineStorm\CommentBundle\Controller\Api\ThreadController
-    name_prefix:  linestorm_cms_module_comment_api_
+    parent:       linestorm_comment_api_provider_controller
+    resource:     LineStorm\CommentBundle\Controller\ThreadController
+    name_prefix:  linestorm_comment_api_
 
-linestorm_cms_module_comment_api_comments_controller:
+linestorm_comment_api_comments_controller:
     type:         rest
-    parent:       linestorm_cms_module_comment_api_threads_controller
-    resource:     LineStorm\CommentBundle\Controller\Api\CommentController
-    name_prefix:  linestorm_cms_module_comment_api_
+    parent:       linestorm_comment_api_threads_controller
+    resource:     LineStorm\CommentBundle\Controller\CommentController
+    name_prefix:  linestorm_comment_api_

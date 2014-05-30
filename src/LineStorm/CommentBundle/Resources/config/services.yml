@@ -1,14 +1,8 @@
 parameters:
-  linestorm.cms.module.comment.class:         LineStorm\CommentBundle\Module\CommentModule
   linestorm.cms.module.comment.manager.class: LineStorm\CommentBundle\Comment\CommentManager
   linestorm.cms.module.comment.form_extension.captcha.class: LineStorm\CommentBundle\Comment\Form\CaptchaFormExtension
 
-services: 
-
-  linestorm.cms.module.comment:
-    class: %linestorm.cms.module.comment.class%
-    tags:
-      - { name: linestorm.cms.module }
+services:
 
   linestorm.cms.module.comment.form.comment:
     class: LineStorm\CommentBundle\Form\CommentFormType

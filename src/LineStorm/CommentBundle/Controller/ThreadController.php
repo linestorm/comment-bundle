@@ -1,6 +1,6 @@
 <?php
 
-namespace LineStorm\CommentBundle\Controller\Api;
+namespace LineStorm\CommentBundle\Controller;
 
 use Doctrine\ORM\Query;
 use FOS\RestBundle\Routing\ClassResourceInterface;

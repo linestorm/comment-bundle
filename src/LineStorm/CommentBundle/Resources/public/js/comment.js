@@ -1,11 +1,9 @@
-
-var contentCounts = contentCounts || {};
-
-define(['jquery', 'cms_api'], function ($, api) {
-
+(function(){
     $(document).ready(function(){
 
-        $commentBlock = $('.comment-block');
+        var $commentBlock = $('.comment-block');
+        var $commentBlockNew = $commentBlock.find('.comment-block-new');
+        var $commentBlockComments = $commentBlock.find('.comment-block-comments');
 
         // get the new comment form
         var loadCommentForm = function(){
@@ -13,8 +11,8 @@ define(['jquery', 'cms_api'], function ($, api) {
                 dataType: 'json',
                 success: function(ob){
                     if(ob.form){
-                        $newForm = $(ob.form);
-                        $commentBlock.find('.comment-block-new').html($newForm);
+                        var $newForm = $(ob.form);
+                        $commentBlockNew.html($newForm);
 
                         $newForm.on('submit', function(e){
                             e.preventDefault();
@@ -23,8 +21,8 @@ define(['jquery', 'cms_api'], function ($, api) {
                             window.lineStorm.api.saveForm($newForm, function(ob, status, xhr){
                                 if(xhr.status === 200){
                                 } else if(xhr.status === 201) {
-                                    $commentBlock.find('.comment-block-comments').append(ob.html);
-                                    $commentBlock.find('.comment-block-new').empty();
+                                    $commentBlockComments.append(ob.html);
+                                    $commentBlockNew.empty();
                                     loadCommentForm();
                                 } else {
                                 }
@@ -43,8 +41,8 @@ define(['jquery', 'cms_api'], function ($, api) {
             window.lineStorm.api.call($commentBlock.data('url-get'), {
                 dataType: 'html',
                 success: function(html){
-                    $commentBlock.find('.comment-block-comments').html(html);
-                    $commentBlock.find('.comment-block-new').find('textarea,input').val('');
+                    $commentBlockComments.html(html);
+                    $commentBlockNew.find('textarea,input').val('');
                 }
             });
             return false;
@@ -59,13 +57,13 @@ define(['jquery', 'cms_api'], function ($, api) {
         $('.comments-refresh-form').on('click', loadCommentForm);
 
         $commentBlock.on('click', '.comment-reply', function(){
-            var parentId = $(this).data('id');
-            var $comment = $(this).closest('.comment-row');
-            window.lineStorm.api.call($commentBlock.data('url-new'), {
+            var $this = $(this);
+            var $comment = $this.closest('.comment-row');
+            window.lineStorm.api.call($this.data('url'), {
                 dataType: 'json',
                 success: function(ob){
                     if(ob.form){
-                        $newForm = $(ob.form);
+                        var $newForm = $(ob.form);
                         $comment.after($newForm);
 
                         $newForm.on('submit', function(e){
@@ -75,8 +73,9 @@ define(['jquery', 'cms_api'], function ($, api) {
                             window.lineStorm.api.saveForm($newForm, function(ob, status, xhr){
                                 if(xhr.status === 200){
                                 } else if(xhr.status === 201) {
-                                    $commentBlock.find('.comment-block-comments').append(ob.html);
-                                    $commentBlock.find('.comment-block-new').empty();
+                                    $comment.find('.media-body').append(ob.html);
+                                    $newForm.remove();
+                                    $commentBlockNew.empty();
                                     loadCommentForm();
                                 } else {
                                 }
@@ -150,5 +149,4 @@ define(['jquery', 'cms_api'], function ($, api) {
         });
 
     });
-
-});
+})();

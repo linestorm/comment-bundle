@@ -1,7 +1,7 @@
-Comment Module for LineStormCMS
-===============================
+Comment Bundle
+==============
 
-Comment Module for LineStormCMS.
+This bundle add functionality for comments on any entity.
 
 Installation
 ============
@@ -44,7 +44,28 @@ Add the default media provider in the linestorm_cms_media namespace inside the `
 is local_storeage
 
 ```yml
-line_storm_comment: ~
+line_storm_comment:
+  mappings:
+    blog:
+      thread:  Acme\DemoBundle\Entity\BlogThread
+      comment: Acme\DemoBundle\Entity\BlogComment
+      acl:     Acme\DemoBundle\Acl\CommentAcl
+    article:
+      thread:  Acme\DemoBundle\Entity\ArticleThread
+      comment: Acme\DemoBundle\Entity\ArticleComment
+      acl:     Acme\DemoBundle\Acl\CommentAcl
+    # ...
+```
+
+`line_storm_comment.mappings` is a list of all pages where comments should be attached. Eacg Thread should implement the
+ThreadInterface and each Comment should implement the CommentInterface. see [setting up threads and comments](docs/1_setup.md)
+for instructions.
+
+Setup the routing by adding this to your `app/config/config.yml`
+```yml
+linestorm_comment_api:
+    resource: "@LineStormCommentBundle/Resources/config/routing/api.yml"
+    prefix: /api
 ```
 
 Step 4: Installing Assets
@@ -55,7 +76,6 @@ Add [.bower.json](.bower.json) to the dependencies
 
 ###Manual
 Download the modules in [.bower.json](.bower.json) to your assets folder
-
 
 
 Step 5: Configuring Assets

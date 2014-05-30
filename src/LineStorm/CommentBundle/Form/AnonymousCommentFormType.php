@@ -34,7 +34,6 @@ class AnonymousCommentFormType extends AbstractCommentForm
         }
 
         $builder->add('submit', 'submit');
-        ;
     }
 
     /**

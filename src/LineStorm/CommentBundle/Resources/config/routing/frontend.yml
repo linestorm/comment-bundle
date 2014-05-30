@@ -1,4 +1,0 @@
-linestorm_cms_module_comment_api:
-  prefix:   /api
-  type:     rest
-  resource: "api.yml"

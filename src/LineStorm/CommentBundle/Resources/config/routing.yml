@@ -1,0 +1,4 @@
+linestorm_comment_api:
+  prefix:   /api
+  type:     rest
+  resource: "routing/api.yml"
